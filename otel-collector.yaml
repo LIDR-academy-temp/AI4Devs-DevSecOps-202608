@@ -1,0 +1,24 @@
+# Recolector de trazas local (servicio `observability` de compose.yaml).
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+exporters:
+  # Cada tramo, con su identificador, su nombre y sus horas, en el registro del contenedor.
+  debug:
+    verbosity: detailed
+  # Las mismas trazas, buscables en Grafana (Tempo).
+  otlp/grafana:
+    endpoint: grafana:4317
+    tls:
+      insecure: true
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      exporters: [debug, otlp/grafana]

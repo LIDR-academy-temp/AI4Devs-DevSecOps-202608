@@ -38,6 +38,9 @@ jobs:
       LOG_LEVEL: silent
       APP_KEY: clave-de-ci-sin-valor-secreto
       APP_URL: http://127.0.0.1:3333
+      APP_NAME: flowsync-api
+      APP_VERSION: 0.0.1
+      APP_ENV: development
       SESSION_DRIVER: memory
     steps:
       - uses: actions/checkout@v7
