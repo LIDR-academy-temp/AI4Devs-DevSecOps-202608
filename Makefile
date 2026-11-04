@@ -245,9 +245,9 @@ ci-lint: ## Valida los workflows de .github/workflows/ con actionlint (Docker)
 # la aplicación arranca igual sin ellos)
 # ---------------------------------------------------------------------------
 
-otel-up: ## Levanta el recolector OTel (4317/4318) y Grafana (http://localhost:3000)
+otel-up: ## Levanta el recolector OTel (4317/4318) y Grafana (http://localhost:3001)
 	@docker compose up -d observability grafana
-	@echo "Trazas: backend con OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 · registro: docker compose logs -f observability · Grafana: http://localhost:3000"
+	@echo "Trazas: backend con OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 · registro: docker compose logs -f observability · Grafana: http://localhost:3001"
 
 otel-down: ## Para el recolector OTel y Grafana
 	@docker compose stop observability grafana

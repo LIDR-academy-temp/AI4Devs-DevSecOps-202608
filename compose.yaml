@@ -61,12 +61,12 @@ services:
     volumes:
       - ./otel-collector.yaml:/etc/otelcol-contrib/config.yaml:ro
 
-  # Grafana con Tempo ya conectado. Solo publica el 3000: sus 4317 y 4318 se
+  # Grafana con Tempo ya conectado. Solo publica el 3000 (en el host, el 3001): sus 4317 y 4318 se
   # quedan en la red de Docker porque los del host son del recolector.
   grafana:
     image: grafana/otel-lgtm:0.37.0
     ports:
-      - '3000:3000'
+      - '3001:3000'
 
 volumes:
   db-data:
