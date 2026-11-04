@@ -18,7 +18,7 @@ import { defineRailway, github, image, preserve, project, service, volume } from
  * El repositorio desde el que se construye la API. Quien despliegue desde su
  * fork cambia solo esta línea.
  */
-const REPOSITORIO = 'davidcp90/s13-infra-ci-2026-08'
+const REPOSITORIO = 'LIDR-academy-temp/AI4Devs-DevSecOps-202608'
 
 export default defineRailway(() => {
   const datos = volume('db-data')
