@@ -1,0 +1,9 @@
+# Proveedor de dashboards de FlowSync para el servicio `grafana` (compose.yaml).
+apiVersion: 1
+
+providers:
+  - name: FlowSync
+    type: file
+    options:
+      path: /flowsync-dashboards
+      foldersFromFilesStructure: false

@@ -50,5 +50,27 @@ services:
       retries: 30
       start_period: 5s
 
+  # Destino local de las trazas (`make otel-up`). El backend exporta aquí por
+  # OTEL_EXPORTER_OTLP_ENDPOINT (HTTP, 4318); el reparto lo hace el recolector:
+  # cada tramo al registro del contenedor y las trazas a Grafana.
+  observability:
+    image: otel/opentelemetry-collector-contrib:0.162.0
+    ports:
+      - '4317:4317'
+      - '4318:4318'
+    volumes:
+      - ./otel-collector.yaml:/etc/otelcol-contrib/config.yaml:ro
+
+  # Grafana con Tempo ya conectado. Solo publica el 3000 (en el host, el 3001): sus 4317 y 4318 se
+  # quedan en la red de Docker porque los del host son del recolector.
+  grafana:
+    image: grafana/otel-lgtm:0.37.0
+    ports:
+      - '3001:3000'
+    volumes:
+      # Dashboard «FlowSync · Trazas» provisionado como código.
+      - ./grafana/dashboards.yaml:/otel-lgtm/grafana/conf/provisioning/dashboards/flowsync.yaml:ro
+      - ./grafana/flowsync-trazas.json:/flowsync-dashboards/flowsync-trazas.json:ro
+
 volumes:
   db-data:

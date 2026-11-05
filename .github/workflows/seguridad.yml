@@ -1,0 +1,95 @@
+name: Seguridad
+
+# Trivy sobre el sistema de archivos del repositorio: secretos versionados y
+# vulnerabilidades conocidas en las dependencias (los package-lock.json).
+#
+# Por qué el umbral empieza en CRÍTICO con arreglo disponible y no en ALTO. La
+# primera ejecución sobre un proyecto con historia devuelve decenas de
+# hallazgos. Un guardarraíl que bloquea a todo el mundo el primer día se apaga
+# el segundo. Así que solo rompe la fusión lo que es crítico y ya tiene versión
+# corregida, porque eso se arregla subiendo una dependencia. Lo alto y lo medio
+# se ven en el resumen de la ejecución, pero no bloquean. Los secretos bloquean
+# siempre y a cualquier severidad: un secreto no tiene «arreglo disponible»,
+# hay que rotarlo.
+#
+# Cómo se sube el listón. Cuando el informe del tercer paso salga limpio de
+# ALTO, se pasa HIGH al segundo paso (`severity: CRITICAL,HIGH`) y se quita
+# del tercero. Cuando salga limpio de MEDIO, se hace lo mismo con MEDIUM. Cada
+# subida va en su propio pull request, con el informe limpio como prueba. El
+# `ignore-unfixed` del segundo paso se quita al final, cuando alguien se
+# encargue de decidir qué hacer con lo que no tiene arreglo.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Solo lee el repositorio. No sube informes SARIF a la pestaña de seguridad: en
+# un repositorio privado sin licencia de pago esa subida falla.
+permissions:
+  contents: read
+
+# Si llegan dos pushes seguidos a la misma referencia, solo interesa el último.
+concurrency:
+  group: seguridad-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  trivy:
+    name: Trivy (secretos y vulnerabilidades)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      # 1 · BLOQUEA. Una invocación propia porque `severity` filtra a todos los
+      # escáneres por igual: con el umbral de las vulnerabilidades, un secreto
+      # de severidad baja pasaría.
+      - name: Secretos (cualquier severidad, bloquea)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: secret
+          severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+          exit-code: 1
+
+      # 2 · BLOQUEA. Solo lo crítico que ya tiene versión corregida.
+      - name: Vulnerabilidades críticas con arreglo (bloquea)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: 1
+
+      # 3 · INFORMA, no bloquea. Corre también cuando un paso anterior ha roto
+      # la fusión, para que el informe esté ahí al revisar el fallo.
+      - name: Vulnerabilidades altas y medias (informa)
+        if: ${{ !cancelled() }}
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln
+          severity: HIGH,MEDIUM
+          exit-code: 0
+          format: table
+          output: trivy-alto-medio.txt
+
+      # La tabla va al resumen de la ejecución, que es donde alguien la va a leer.
+      - name: Publicar el informe en el resumen
+        if: ${{ !cancelled() }}
+        run: |
+          {
+            echo '## Trivy: vulnerabilidades altas y medias (no bloquean)'
+            echo
+            if [ -s trivy-alto-medio.txt ]; then
+              echo '```text'
+              cat trivy-alto-medio.txt
+              echo '```'
+            else
+              echo 'Sin hallazgos altos ni medios.'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

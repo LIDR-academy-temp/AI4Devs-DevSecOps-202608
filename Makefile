@@ -14,7 +14,7 @@ BACKEND  := backend
 FRONTEND := frontend
 
 .DEFAULT_GOAL := help
-.PHONY: test-unit test-e2e ui test-ui test-web hooks help setup start install env db-up db-down migrate seed db-readonly copia-produccion test image image-run image-stop ci-lint clean
+.PHONY: test-unit test-e2e ui test-ui test-web hooks help setup start install env db-up db-down migrate seed db-readonly copia-produccion test image image-run image-stop ci-lint otel-up otel-down clean
 
 # La ayuda se genera a partir de los comentarios `## ...` de cada target, para
 # que no haya un segundo listado que mantener a mano y que pueda divergir.
@@ -239,6 +239,18 @@ image-stop: ## Para y borra el contenedor de la imagen
 # todo .github/workflows/ (con shellcheck sobre cada `run:`, que trae la imagen).
 ci-lint: ## Valida los workflows de .github/workflows/ con actionlint (Docker)
 	@docker run --rm -v "$(CURDIR)":/repo -w /repo rhysd/actionlint:1.7.12 -color
+
+# ---------------------------------------------------------------------------
+# otel: destino local de las trazas (fuera de db-up y de setup a propósito:
+# la aplicación arranca igual sin ellos)
+# ---------------------------------------------------------------------------
+
+otel-up: ## Levanta el recolector OTel (4317/4318) y Grafana (http://localhost:3001)
+	@docker compose up -d observability grafana
+	@echo "Trazas: backend con OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 · registro: docker compose logs -f observability · Grafana: http://localhost:3001"
+
+otel-down: ## Para el recolector OTel y Grafana
+	@docker compose stop observability grafana
 
 # ---------------------------------------------------------------------------
 # clean
