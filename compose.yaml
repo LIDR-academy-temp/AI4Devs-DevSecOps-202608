@@ -67,6 +67,10 @@ services:
     image: grafana/otel-lgtm:0.37.0
     ports:
       - '3001:3000'
+    volumes:
+      # Dashboard «FlowSync · Trazas» provisionado como código.
+      - ./grafana/dashboards.yaml:/otel-lgtm/grafana/conf/provisioning/dashboards/flowsync.yaml:ro
+      - ./grafana/flowsync-trazas.json:/flowsync-dashboards/flowsync-trazas.json:ro
 
 volumes:
   db-data:
