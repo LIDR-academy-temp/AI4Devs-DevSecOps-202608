@@ -68,6 +68,12 @@ export default defineRailway(() => {
       DB_PASSWORD: db.env.POSTGRES_PASSWORD,
       APP_URL: preserve(),
       APP_KEY: preserve(),
+      // Obligatorias en `start/env.ts`: sin ellas fallan el `preDeploy` y el
+      // arranque. Dan nombre, versión y entorno a las trazas de OpenTelemetry.
+      // No son secretas, así que van con su valor y no con `preserve()`.
+      APP_NAME: 'flowsync-api',
+      APP_VERSION: '0.0.1',
+      APP_ENV: 'production',
     },
   })
 
